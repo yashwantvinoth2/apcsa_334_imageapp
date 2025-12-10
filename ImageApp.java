@@ -72,28 +72,147 @@ public class ImageApp
     // Image #4 Using the original image and pixels, rotate it 180 degrees
     Picture upsidedownImage = new Picture(pictureFile);
     Pixel[][] upsideDownPixels = upsidedownImage.getPixels2D();
-    
-    /* to be implemented */  
+
+    /* implementation */  
+
+    int height = upsideDownPixels.length;
+    int width = upsideDownPixels[0].length;
+
+    // Create new picture for rotated result (same dimensions for 180°)
+    Picture rotated180 = new Picture(width, height);
+    Pixel[][] rotated180Pixels = rotated180.getPixels2D();
+
+    // Get actual dimensions of rotated image (may differ from constructor params)
+    int rotatedHeight = rotated180Pixels.length;
+    int rotatedWidth = rotated180Pixels[0].length;
+
+    // 180 degree rotation matrix: [[-1, 0], [0, -1]]
+    // Inverse is the same for 180° rotation
+    Matrix2by2 rot180Inverse = new Matrix2by2(-1, 0, 0, -1);
+
+    // Center of the images
+    double centerX = (width - 1) / 2.0;
+    double centerY = (height - 1) / 2.0;
+    double rotatedCenterX = (rotatedWidth - 1) / 2.0;
+    double rotatedCenterY = (rotatedHeight - 1) / 2.0;
+
+    // Map from destination to source (reverse mapping)
+    for (int newRow = 0; newRow < rotatedHeight; newRow++) {
+        for (int newCol = 0; newCol < rotatedWidth; newCol++) {
+            // Translate destination pixel to origin
+            double x = newCol - rotatedCenterX;
+            double y = newRow - rotatedCenterY;
+            
+            // Apply inverse rotation to find source pixel
+            Vector1by2 destPos = new Vector1by2(x, y);
+            Vector1by2 sourcePos = Matrix2by2.multiply(destPos, rot180Inverse);
+            
+            // Translate back to image coordinates
+            int sourceCol = (int) Math.round(sourcePos.getX() + centerX);
+            int sourceRow = (int) Math.round(sourcePos.getY() + centerY);
+            
+            // Only copy if source pixel is within bounds (don't clamp!)
+            if (sourceRow >= 0 && sourceRow < height && sourceCol >= 0 && sourceCol < width) {
+                rotated180Pixels[newRow][newCol].setColor(upsideDownPixels[sourceRow][sourceCol].getColor());
+            }
+            // Pixels outside bounds remain as default (black or white)
+        }
+    }
+    rotated180.explore();
+
+
+
 
     
 
+  // Image #5 Using the original image and pixels, rotate image 90
+  Picture rotateImg = new Picture(pictureFile);
+  Pixel[][] rotatePixels = rotateImg.getPixels2D();
 
+  /* implementation */
+  height = rotatePixels.length;
+  width = rotatePixels[0].length;
 
-    
+  // For 90° rotation, dimensions swap
+  Picture rotated90CCW = new Picture(height, width);
+  Pixel[][] rotated90CCWPixels = rotated90CCW.getPixels2D();
+  int newHeight = rotated90CCWPixels.length;
+  int newWidth = rotated90CCWPixels[0].length;
 
-    // Image #5 Using the original image and pixels, rotate image 90
-    Picture rotateImg = new Picture(pictureFile);
-    Pixel[][] rotatePixels = rotateImg.getPixels2D();
+  // 90 degree counterclockwise: [[0, 1], [-1, 0]]
+  // Inverse (90° clockwise): [[0, -1], [1, 0]]
+  Matrix2by2 rot90CCWInverse = new Matrix2by2(0, 1, -1, 0);
 
-    /* to be implemented */
+  centerX = (width - 1) / 2.0;
+  centerY = (height - 1) / 2.0;
+  double newCenterX = (newWidth - 1) / 2.0;
+  double newCenterY = (newHeight - 1) / 2.0;
 
+  for (int newRow = 0; newRow < newHeight; newRow++) {
+      for (int newCol = 0; newCol < newWidth; newCol++) {
+          // Translate destination pixel to origin
+          double x = newCol - newCenterX;
+          double y = newRow - newCenterY;
+          
+          // Apply inverse rotation
+          Vector1by2 destPos = new Vector1by2(x, y);
+          Vector1by2 sourcePos = Matrix2by2.multiply(destPos, rot90CCWInverse);
+          
+          // Translate back to original image coordinates
+          int sourceCol = (int) Math.round(sourcePos.getX() + centerX);
+          int sourceRow = (int) Math.round(sourcePos.getY() + centerY);
+          
+          // Only copy if source pixel is within bounds
+          if (sourceRow >= 0 && sourceRow < height && sourceCol >= 0 && sourceCol < width) {
+              rotated90CCWPixels[newRow][newCol].setColor(rotatePixels[sourceRow][sourceCol].getColor());
+          }
+      }
+  }
+  rotated90CCW.explore();
 
-    // Image #6 Using the original image and pixels, rotate image -90
-    Picture rotateImg2 = new Picture(pictureFile);
-    Pixel[][] rotatePixels2 = rotateImg2.getPixels2D();
+  // Image #6 Using the original image and pixels, rotate image -90
+  Picture rotateImg2 = new Picture(pictureFile);
+  Pixel[][] rotatePixels2 = rotateImg2.getPixels2D();
 
-    /* to be implemented */
-    
+  int heightCW = rotatePixels2.length;
+  int widthCW = rotatePixels2[0].length;
+
+  // For -90° rotation, dimensions swap
+  Picture rotated90CW = new Picture(heightCW, widthCW);
+  Pixel[][] rotated90CWPixels = rotated90CW.getPixels2D();
+  int newHeightCW = rotated90CWPixels.length;
+  int newWidthCW = rotated90CWPixels[0].length;
+
+  // -90 degree (clockwise): [[0, -1], [1, 0]]
+  // Inverse (90° counterclockwise): [[0, 1], [-1, 0]]
+  Matrix2by2 rot90CWInverse = new Matrix2by2(0, -1, 1, 0);
+
+  double centerXCW = (widthCW - 1) / 2.0;
+  double centerYCW = (heightCW - 1) / 2.0;
+  double newCenterXCW = (newWidthCW - 1) / 2.0;
+  double newCenterYCW = (newHeightCW - 1) / 2.0;
+
+  for (int newRowCW = 0; newRowCW < newHeightCW; newRowCW++) {
+      for (int newColCW = 0; newColCW < newWidthCW; newColCW++) {
+          // Translate destination pixel to origin
+          double xCW = newColCW - newCenterXCW;
+          double yCW = newRowCW - newCenterYCW;
+          
+          // Apply inverse rotation
+          Vector1by2 destPosCW = new Vector1by2(xCW, yCW);
+          Vector1by2 sourcePosCW = Matrix2by2.multiply(destPosCW, rot90CWInverse);
+          
+          // Translate back to original image coordinates
+          int sourceColCW = (int) Math.round(sourcePosCW.getX() + centerXCW);
+          int sourceRowCW = (int) Math.round(sourcePosCW.getY() + centerYCW);
+          
+          // Only copy if source pixel is within bounds
+          if (sourceRowCW >= 0 && sourceRowCW < heightCW && sourceColCW >= 0 && sourceColCW < widthCW) {
+              rotated90CWPixels[newRowCW][newColCW].setColor(rotatePixels2[sourceRowCW][sourceColCW].getColor());
+          }
+      }
+  }
+  rotated90CW.explore();
 
 
 
